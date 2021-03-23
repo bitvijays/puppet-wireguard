@@ -17,10 +17,10 @@ Puppet::Functions.create_function(:'wireguard::genkey') do
   def genkey(name, path='/etc/wireguard')
     private_key_path = File.join(path, "#{name}.key")
     public_key_path = File.join(path, "#{name}.pub")
-    [private_key_path,public_key_path].each do |p|
+    [private_key_path, public_key_path].each do |p|
       raise Puppet::ParseError, "#{p} is a directory" if File.directory?(p)
       dir = File.dirname(p)
-      raise Puppet::ParseError, "#{dir} is not writable" if not File.writable?(dir)
+      raise Puppet::ParseError, "#{dir} is not writable" unless File.writable?(dir)
     end
 
     private_key = call_function('wireguard::genprivatekey', private_key_path)
