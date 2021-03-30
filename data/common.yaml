@@ -1,0 +1,6 @@
+---
+
+wireguard::temp: hello
+wireguard::ipaddress:
+  bofficetest: 192.168.4.2
+  node-0101 : 192.168.4.4
