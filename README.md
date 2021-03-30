@@ -27,6 +27,19 @@ secure point-to-point connections in routed or bridged configurations.
 
 We assume that the deployment of wireguard is in the one server and multiple clients
 
+### Storing IP Address data
+
+IP address information is currently stored in `data/common.yaml` in the form of `hostname: ipaddress`
+
+```yaml
+---
+wireguard::ipaddress:
+  bofficetest: 192.168.4.1
+  node-0101 : 192.168.4.2
+```
+
+The lookup is used to provide address to the interfaces.
+
 ### Server
 
 Assuming that the server IP Address is 192.168.4.1 and 
@@ -35,7 +48,9 @@ Assuming that the server IP Address is 192.168.4.1 and
 class {'::wireguard':
   manage_repo => true,
   interfaces => {"wg1"=> 
-    { address => "192.168.4.1",
+    { 
+      #address => "192.168.4.1",
+      address => lookup("wireguard::ipaddress.$hostname",undef, undef, '169.1.1.1'),
       listen_port => 51820,
       ## Public Keys of the Clients
       peers => [ {"PublicKey" => "Cg8ponDq6USCfhWymrzgnqG4bTZOudb03HxGg1xTQgQ=", "AllowedIPs" => "192.168.4.0/24"}, ],
@@ -59,7 +74,8 @@ class {'::wireguard':
   interfaces => {"wg1"=> 
     { 
       # Address of the client
-      address => "192.168.4.2",
+      #address => "192.168.4.2",
+      address => lookup("wireguard::ipaddress.$hostname",undef, undef, '169.1.1.1'),
       listen_port => 53000,
       # Client peer would be the server public key and Endpoint would be the Server IP Address
       peers => [ {"PublicKey" => "XNjbPohUcm6TVo3kJlC8cKIr+jahysvGDwiJcXhBbUk=", "Endpoint" => "192.168.1.241:51820", "PersistentKeepalive" => 60, "AllowedIPs" => "192.168.4.0/24"}, ],
@@ -74,7 +90,7 @@ file { '/etc/wireguard/wg1.pub':
 }
 ```
 
-We need to find an automatic way to submit the public keys of the client and add them to the Wireguard server. Also, figure out a way to assign IP address?
+We need to find an automatic way to submit the public keys of the client and add them to the Wireguard server.
 
 ## Classes
 
