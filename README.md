@@ -23,6 +23,59 @@ secure point-to-point connections in routed or bridged configurations.
 * [`wireguard::genpsk`](#wireguardgenpsk): Returns string containing the wireguard psk for a certain interface.
 * [`wireguard::genpublickey`](#wireguardgenpublickey): Returns a public key derived from a private key. Will be generated and saved to disk if it doesn't already exist.
 
+## Usage
+
+We assume that the deployment of wireguard is in the one server and multiple clients
+
+### Server
+
+Assuming that the server IP Address is 192.168.4.1 and 
+
+```ruby
+class {'::wireguard':
+  manage_repo => true,
+  interfaces => {"wg1"=> 
+    { address => "192.168.4.1",
+      listen_port => 51820,
+      ## Public Keys of the Clients
+      peers => [ {"PublicKey" => "Cg8ponDq6USCfhWymrzgnqG4bTZOudb03HxGg1xTQgQ=", "AllowedIPs" => "192.168.4.0/24"}, ],
+      # Generate the server private key by using deferred function
+      private_key => Deferred('wireguard::genprivatekey', ['/etc/wireguard/wg1.key'])
+    }
+  },    
+}
+# Generate the server public key using deferred function
+file { '/etc/wireguard/wg1.pub':
+content => Deferred('wireguard::genpublickey', ['/etc/wireguard/wg1.key', '/etc/wireguard/wg1.pub'])
+}  
+```
+
+### Client
+
+
+```ruby
+class {'::wireguard':
+  manage_repo => false,
+  interfaces => {"wg1"=> 
+    { 
+      # Address of the client
+      address => "192.168.4.2",
+      listen_port => 53000,
+      # Client peer would be the server public key and Endpoint would be the Server IP Address
+      peers => [ {"PublicKey" => "XNjbPohUcm6TVo3kJlC8cKIr+jahysvGDwiJcXhBbUk=", "Endpoint" => "192.168.1.241:51820", "PersistentKeepalive" => 60, "AllowedIPs" => "192.168.4.0/24"}, ],
+      # Generate the private key of the client
+      private_key => Deferred('wireguard::genprivatekey', ['/etc/wireguard/wg1.key'])
+    }
+  },
+}
+# Generate the public key of the client
+file { '/etc/wireguard/wg1.pub':
+  content => Deferred('wireguard::genpublickey', ['/etc/wireguard/wg1.key', '/etc/wireguard/wg1.pub'])
+}
+```
+
+We need to find an automatic way to submit the public keys of the client and add them to the Wireguard server. Also, figure out a way to assign IP address?
+
 ## Classes
 
 ### wireguard
