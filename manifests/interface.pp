@@ -125,5 +125,5 @@ define wireguard::interface (
 
     File["${config_dir}/${name}.conf"] ~> Service["wg-quick@${name}.service"]
 
- }
+  }
 }
