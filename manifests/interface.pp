@@ -31,7 +31,7 @@
 #   Path to wireguard configuration files
 define wireguard::interface (
   Any                             $private_key,
-  Integer[1,65535]                $listen_port,
+  Optional[Integer[1,65535]]      $listen_port = undef,
   Enum['present','absent']        $ensure   = 'present',
   Optional[Variant[Array,String]] $address  = undef,
   Optional[Integer[1,9202]]       $mtu      = undef,

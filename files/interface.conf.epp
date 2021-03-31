@@ -25,7 +25,9 @@ Address = <%= $address %>
 SaveConfig = true
 <% } -%>
 PrivateKey = <%= $private_key %>
+<%- if $listen_port { -%>
 ListenPort = <%= $listen_port %>
+<% } -%>
 <%- if $mtu { -%>
 MTU = <%= $mtu %>
 <% } -%>
