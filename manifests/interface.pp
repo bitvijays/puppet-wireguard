@@ -29,6 +29,8 @@
 #    save current state of the interface upon shutdown
 # @param config_dir
 #   Path to wireguard configuration files
+# @param manage_service
+#   Manage interface service - disable to allow user to manage or manage elsewhere
 define wireguard::interface (
   Any                             $private_key,
   Optional[Integer[1,65535]]      $listen_port = undef,
@@ -52,6 +54,7 @@ define wireguard::interface (
   Optional[String]      $dns          = undef,
   Boolean               $saveconfig   = true,
   Stdlib::Absolutepath  $config_dir   = '/etc/wireguard',
+  Boolean $manage_service = true,
 ) {
   $config = {
     address     => $address,
@@ -91,6 +94,7 @@ define wireguard::interface (
     $content = inline_epp(file("${module_name}/interface.conf.epp"), $config)
   }
 
+
   file {"${config_dir}/${name}.conf":
     ensure    => $ensure,
     mode      => '0600',
@@ -101,19 +105,25 @@ define wireguard::interface (
     notify    => Service["wg-quick@${name}.service"],
   }
 
-  $_service_ensure = $ensure ? {
-    'absent' => 'stopped',
-    default  => 'running',
-  }
-  $_service_enable = $ensure ? {
-    'absent' => false,
-    default  => true,
-  }
+  if $manage_service {
 
-  service {"wg-quick@${name}.service":
-    ensure   => $_service_ensure,
-    provider => 'systemd',
-    enable   => $_service_enable,
-    require  => File["${config_dir}/${name}.conf"],
-  }
+    $_service_ensure = $ensure ? {
+      'absent' => 'stopped',
+      default  => 'running',
+    }
+    $_service_enable = $ensure ? {
+      'absent' => false,
+      default  => true,
+    }
+
+    service {"wg-quick@${name}.service":
+      ensure   => $_service_ensure,
+      provider => 'systemd',
+      enable   => $_service_enable,
+      require  => File["${config_dir}/${name}.conf"],
+    }
+
+    File["${config_dir}/${name}.conf"] ~> Service["wg-quick@${name}.service"]
+
+ }
 }
